@@ -4,8 +4,27 @@ import requests
 import os
 
 
-def recursiveSearch(args):
-    print ("r is working")
+def recursiveSearch(args, level, path):
+    response = requests.get(args.url)
+    html_cont = response.text
+    soup = BeautifulSoup(html_cont, 'html.parser')
+    imgs = soup.find_all('img')
+
+    for img in imgs:
+        img_url = img.get('src')
+        if not img_url:
+            continue
+        if not img_url.startswith(('http:', 'https:')):
+            img_url = requests.compat.urljoin(args.url, img_url)
+        
+        name = os.path.basename(img_url)
+        if (getReqImg(name) == False):
+            continue
+        result = requests.get(img_url)
+        # if (os.path.exists(path) or os.path.isdir(os.path.dirname(path))):
+        # name = path + name
+        with open(name, 'wb') as f:
+            f.write(result.content)
 
 def dephtSetiing(args):
     print ("l is working")
@@ -28,35 +47,18 @@ def main():
     parser.add_argument("-l", "--level", dest="lvl", type=int, nargs='?', const=5, help="Sets the depht of search")
     parser.add_argument("-p", "--path", dest="pth", type=str, nargs='?', const="./data/", help="The path of page")
     parser.add_argument("url", type=str, help="The URL to process")
-    
     args = parser.parse_args()
 
-    response = requests.get(args.url)
-    html_cont = response.text
-    soup = BeautifulSoup(html_cont, 'html.parser')
-    imgs = soup.find_all('img')
+    print (args.lvl)
+    level = 5
+    path = "./data/"
+    if args.lvl:
+        level = args.lvl
+    if args.pth:
+        path = args.pth
+    if args.rec:
+        recursiveSearch(args, level, path)
 
-    for img in imgs:
-        img_url = img.get('src')
-        if not img_url:
-            continue
-        if not img_url.startswith(('http:', 'https:')):
-            img_url = requests.compat.urljoin(args.url, img_url)
-        
-        name = os.path.basename(img_url)
-        if (getReqImg(name) == False):
-            continue
-        result = requests.get(img_url)
-
-        with open(name, 'wb') as f:
-            f.write(result.content)
-
-    # if args.rec:
-    #     recursiveSearch(args)
-    # if args.lvl:
-    #     dephtSetiing(args)
-    # if args.pth:
-    #     saveingInPath(args)
     # except Exception as e:
         # print("ape stop: ".format(e))
 
