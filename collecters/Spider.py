@@ -4,11 +4,12 @@ import requests
 import os
 
 
-def recursiveSearch(args, level, path):
+def recursiveSearch(args, lvl, pth):
     response = requests.get(args.url)
     html_cont = response.text
     soup = BeautifulSoup(html_cont, 'html.parser')
     imgs = soup.find_all('img')
+    os.makedirs(os.path.dirname(pth), exist_ok=True)
 
     for img in imgs:
         img_url = img.get('src')
@@ -22,7 +23,7 @@ def recursiveSearch(args, level, path):
             continue
         result = requests.get(img_url)
         # if (os.path.exists(path) or os.path.isdir(os.path.dirname(path))):
-        # name = path + name
+        name = pth + name
         with open(name, 'wb') as f:
             f.write(result.content)
 
@@ -49,13 +50,17 @@ def main():
     parser.add_argument("url", type=str, help="The URL to process")
     args = parser.parse_args()
 
-    print (args.lvl)
     level = 5
     path = "./data/"
     if args.lvl:
         level = args.lvl
     if args.pth:
+        if args.pth[0:2] != "./":
+            args.pth = "./" + args.pth
+        if args.pth[-1] != '/':
+            args.pth += "/"
         path = args.pth
+    print (path)
     if args.rec:
         recursiveSearch(args, level, path)
 
